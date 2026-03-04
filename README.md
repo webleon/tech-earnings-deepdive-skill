@@ -24,9 +24,10 @@ Based on Day1Global Framework · Replicating Professional Investment Analysis Me
 
 Tech Earnings Deep Dive 是一个机构级投资分析系统，专为科技股财报深度分析设计。系统整合了 **16 大分析模块**、**6 大投资哲学视角**、**6 种估值方法**，配合反偏见框架和 Pre-Mortem 工具，帮助投资者做出更理性、更全面、更可靠的投资决策。
 
-**最新版本**: 2026-03-03  
+**最新版本**: 2026-03-04  
 **功能完成率**: 99%  
-**数据基准**: Damodaran 2026 年 1 月最新数据
+**数据基准**: Damodaran 2026 年 1 月最新数据  
+**License**: [MIT](LICENSE)
 
 ---
 
