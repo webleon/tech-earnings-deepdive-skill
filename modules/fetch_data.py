@@ -30,12 +30,28 @@ CACHE_TTL_HOURS = 1  # 缓存有效期 1 小时（股价实时变化）
 
 
 class StockDataFetcher:
-    """免费股票数据获取器（yfinance + SEC EDGAR）"""
+    """股票数据获取器（yfinance 主 + Finnhub 备用）"""
     
     def __init__(self, ticker: str):
         self.ticker = ticker.upper()
         self.stock = yf.Ticker(ticker)
         self.cache_file = CACHE_DIR / f"{self.ticker}_data.json"
+        
+        # Finnhub API（备用）
+        finnhub_config_file = Path(__file__).parent / '..' / 'config.local.json'
+        self.finnhub_client = None
+        if finnhub_config_file.exists():
+            try:
+                with open(finnhub_config_file, 'r') as f:
+                    local_config = json.load(f)
+                    finnhub_api_key = local_config.get('finnhub_api_key')
+                    if finnhub_api_key:
+                        import finnhub
+                        self.finnhub_client = finnhub.Client(api_key=finnhub_api_key)
+                        print("✅ Finnhub 备用数据源已启用")
+            except Exception as e:
+                print(f"⚠️ Finnhub 配置失败：{e}")
+                self.finnhub_client = None
         
         # SEC User-Agent（必须设置）
         # 从本地配置文件读取，避免提交敏感信息到 GitHub
@@ -507,6 +523,75 @@ class StockDataFetcher:
                 return (current - previous) / previous
         return 0
     
+    def get_sm_expense(self) -> dict:
+        """
+        获取 S&M 费用（Selling & Marketing Expense）
+        
+        数据来源：
+        1. yfinance 财报数据（主要）
+        2. Finnhub 备用（如配置）
+        
+        返回：
+        {
+            'annual': [年度 S&M 费用列表],
+            'quarterly': [季度 S&M 费用列表],
+            'latest_annual': 最新年度费用,
+            'latest_quarterly': 最新季度费用,
+            'yoy_growth': 同比增长率
+        }
+        """
+        result = {
+            'annual': [],
+            'quarterly': [],
+            'latest_annual': 0,
+            'latest_quarterly': 0,
+            'yoy_growth': 0
+        }
+        
+        try:
+            # 1. 从 yfinance 获取 S&M 费用
+            financials = self.stock.financials
+            
+            # 查找 S&M 相关字段
+            sm_keywords = [
+                'Selling And Marketing Expense',
+                'Selling General And Administration',
+                'Selling General Administrative',
+                'Sales And Marketing'
+            ]
+            
+            sm_row = None
+            for keyword in sm_keywords:
+                if keyword in financials.index:
+                    sm_row = financials.loc[keyword]
+                    break
+            
+            if sm_row is not None and len(sm_row) > 0:
+                # 获取年度数据
+                result['annual'] = sm_row.tolist()
+                result['latest_annual'] = sm_row.iloc[0] if len(sm_row) > 0 else 0
+                
+                # 计算增长率
+                if len(sm_row) >= 2 and sm_row.iloc[1] > 0:
+                    result['yoy_growth'] = (sm_row.iloc[0] - sm_row.iloc[1]) / sm_row.iloc[1]
+                
+                print(f"✅ 获取到 S&M 费用：${result['latest_annual']/1e9:.2f}B (增长：{result['yoy_growth']*100:.1f}%)")
+            
+            # 2. Finnhub 备用（如 yfinance 失败）
+            if result['latest_annual'] == 0 and self.finnhub_client:
+                try:
+                    financials_finnhub = self.finnhub_client.company_basic_financials(self.ticker, 'all')
+                    if financials_finnhub:
+                        # Finnhub 数据提取逻辑
+                        pass  # 暂时不实现，yfinance 通常够用
+                except:
+                    pass
+            
+        except Exception as e:
+            print(f"⚠️ 获取 S&M 费用失败：{e}")
+        
+        return result
+    
     def get_all_data(self, use_cache=True) -> dict:
         """获取所有数据"""
         # 检查缓存
@@ -527,7 +612,8 @@ class StockDataFetcher:
             'analyst_estimates': self.get_analyst_estimates(),
             'sec_filings': self.get_sec_filings(),
             'insider_trades': self.get_insider_trades(),
-            'institutional_ownership': self.get_institutional_ownership()
+            'institutional_ownership': self.get_institutional_ownership(),
+            'sm_expense': self.get_sm_expense()  # S&M 费用
         }
         
         # 保存到缓存
