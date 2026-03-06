@@ -30,28 +30,12 @@ CACHE_TTL_HOURS = 1  # 缓存有效期 1 小时（股价实时变化）
 
 
 class StockDataFetcher:
-    """股票数据获取器（yfinance 主 + Finnhub 备用）"""
+    """股票数据获取器（yfinance）"""
     
     def __init__(self, ticker: str):
         self.ticker = ticker.upper()
         self.stock = yf.Ticker(ticker)
         self.cache_file = CACHE_DIR / f"{self.ticker}_data.json"
-        
-        # Finnhub API（备用）
-        finnhub_config_file = Path(__file__).parent / '..' / 'config.local.json'
-        self.finnhub_client = None
-        if finnhub_config_file.exists():
-            try:
-                with open(finnhub_config_file, 'r') as f:
-                    local_config = json.load(f)
-                    finnhub_api_key = local_config.get('finnhub_api_key')
-                    if finnhub_api_key:
-                        import finnhub
-                        self.finnhub_client = finnhub.Client(api_key=finnhub_api_key)
-                        print("✅ Finnhub 备用数据源已启用")
-            except Exception as e:
-                print(f"⚠️ Finnhub 配置失败：{e}")
-                self.finnhub_client = None
         
         # SEC User-Agent（必须设置）
         # 从本地配置文件读取，避免提交敏感信息到 GitHub

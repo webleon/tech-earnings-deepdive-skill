@@ -509,33 +509,24 @@ class BiasFramework:
         return None
     
     def _check_tech_blind_spots(self) -> dict:
-        """检查 5 大科技盲区"""
+        """检查科技股盲区（只包含实际可用的检查）"""
         blind_spots = []
         
-        # 盲区 1: TAM 幻觉
-        spot1 = self._check_tam_illusion()
+        # 1. 股票期权稀释（✅ 已实现）
+        spot1 = self._check_stock_dilution()
         if spot1:
             blind_spots.append(spot1)
         
-        # 盲区 2: AI 收入真实性
+        # 2. AI 收入真实性（✅ 已实现 - 基于公司描述）
         spot2 = self._check_ai_revenue()
         if spot2:
             blind_spots.append(spot2)
         
-        # 盲区 3: 股票期权稀释
-        spot3 = self._check_stock_dilution()
-        if spot3:
-            blind_spots.append(spot3)
-        
-        # 盲区 4: 客户获取成本拐点
-        spot4 = self._check_cac_inflection()
-        if spot4:
-            blind_spots.append(spot4)
-        
-        # 盲区 5: 监管尾部风险
-        spot5 = self._check_regulatory_risk()
-        if spot5:
-            blind_spots.append(spot5)
+        # 注意：以下检查需要 SEC 文本挖掘或精确的 CAC 数据
+        # 由于数据源不可靠，暂不实现，避免误导用户
+        # - TAM 幻觉检查：需要公司声称的 TAM 数据（SEC 10-K 文本挖掘）
+        # - CAC 拐点检查：需要新增客户数（SEC 10-K 文本挖掘）
+        # - 监管尾部风险：需要法律章节分析（SEC 10-K 文本挖掘）
         
         return {
             'blind_spots': blind_spots,
@@ -586,16 +577,16 @@ class BiasFramework:
         except Exception as e:
             return None
 
-    def _check_tam_illusion(self) -> dict:
-        """检查 TAM 幻觉"""
-        # 需要 TAM 数据
-        return None
-    
     def _check_ai_revenue(self) -> dict:
-        """检查 AI 收入真实性"""
-        description = self.company_info.get('description', '').lower() if hasattr(self, 'company_info') else ''
+        """检查 AI 收入真实性（基于公司描述）"""
+        # 从公司描述中检查是否涉及 AI
+        description = self.data.get('company_info', {}).get('description', '')
+        if not description:
+            return None
         
-        if 'ai' in description or 'artificial intelligence' in description:
+        description_lower = description.lower()
+        
+        if 'ai' in description_lower or 'artificial intelligence' in description_lower:
             return {
                 'name': 'AI 收入真实性',
                 'description': '公司涉及 AI 业务，需核实 AI 收入定义和可持续性',
@@ -603,29 +594,6 @@ class BiasFramework:
                     'AI 收入的具体定义是什么？',
                     '是经常性收入还是一次性？',
                     '客户是试用还是大规模部署？'
-                ],
-                'risk': '中'
-            }
-        return None
-    
-    def _check_cac_inflection(self) -> dict:
-        """检查客户获取成本拐点"""
-        # 需要 CAC 数据，暂时返回 None
-        return None
-    
-    def _check_regulatory_risk(self) -> dict:
-        """检查监管尾部风险"""
-        # 大型科技公司通常有监管风险
-        market_cap = self.price.get('market_cap', 0)
-        
-        if market_cap > 1e12:  # 万亿以上市值
-            return {
-                'name': '监管尾部风险',
-                'description': '大型科技公司面临反垄断监管风险',
-                'checklist': [
-                    '是否有正在进行的反垄断调查？',
-                    'AI 监管政策的潜在影响？',
-                    '数据隐私法规的合规成本？'
                 ],
                 'risk': '中'
             }
