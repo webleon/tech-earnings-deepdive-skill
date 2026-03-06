@@ -8,8 +8,8 @@ venv/
 # 缓存
 cache/
 
-# 输出报告（测试用）
-output/
+# 输出报告（外部存储，不纳入版本控制）
+# 输出目录已移至 ~/.openclaw/tech-earnings-output/
 
 # 日志
 log/
@@ -23,3 +23,10 @@ log/
 
 # 本地配置（含敏感信息）
 config.local.json
+
+# 验证脚本
+verify_*.py
+
+# 本地输出
+output/
+

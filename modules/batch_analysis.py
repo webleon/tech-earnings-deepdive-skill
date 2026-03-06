@@ -6,6 +6,7 @@
 """
 
 import sys
+import os
 import json
 import argparse
 from datetime import datetime
@@ -32,7 +33,9 @@ class BatchAnalyzer:
         self.tickers = tickers
         self.max_workers = max_workers
         self.results = {}
-        self.output_dir = Path('output/batch')
+        # 使用环境变量 OUTPUT_DIR，默认外部存储
+        output_base = os.environ.get('OUTPUT_DIR', Path.home() / '.openclaw' / 'tech-earnings-output')
+        self.output_dir = Path(output_base) / 'batch'
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def analyze_all(self, use_cache: bool = True, skip_p2: bool = False) -> Dict:
@@ -111,7 +114,11 @@ class BatchAnalyzer:
             valuation_summary = valuation.get('summary', {})
             upside = valuation_summary.get('upside_downside', 0)
             
-            base_score = (avg_module_score * 0.5 + perspective_pct * 0.2 + (100 + upside) / 2 * 0.3)
+            # 估值评分转换：与 generate_single_report.py 保持一致
+            # 基准分 75 分，upside 每 +1% 加 1.25 分，范围 0-100
+            valuation_score = min(100, max(0, 75 + upside * 1.25))
+            
+            base_score = (avg_module_score * 0.5 + perspective_pct * 0.2 + valuation_score * 0.3)
             
             # 红旗减分
             red_flags = biases.get('financial_red_flags', {}).get('flags', [])
@@ -126,13 +133,13 @@ class BatchAnalyzer:
             
             # ========== MSCI Barra 6 大因子评分 ==========
             # 质量因子（30%）：A,B,C,E,H,I,O
-            quality_modules = ['A_revenue_quality', 'B_profitability', 'C_cashflow', 
-                              'E_competitive_landscape', 'H_partner_ecosystem', 
-                              'I_executive_team', 'O_accounting_quality']
+            quality_modules = ['A_revenue_quality', 'B_profitability', 'C_cash_flow', 
+                              'E_competitive_landscape', 'H_partners', 
+                              'I_management', 'O_accounting']
             quality_score = sum(modules.get(m, {}).get('score', 0) for m in quality_modules) / len(quality_modules)
             
             # 成长因子（25%）：F,G,N
-            growth_modules = ['F_core_kpis', 'G_products_new_business', 'N_rd_efficiency']
+            growth_modules = ['F_core_kpis', 'G_products', 'N_rd_efficiency']
             growth_score = sum(modules.get(m, {}).get('score', 0) for m in growth_modules) / len(growth_modules)
             
             # 价值因子（20%）：K

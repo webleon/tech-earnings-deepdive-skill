@@ -26,7 +26,7 @@ except ImportError:
 # 缓存配置
 CACHE_DIR = Path(__file__).parent / '..' / 'cache'
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
-CACHE_TTL_HOURS = 24  # 缓存有效期 24 小时
+CACHE_TTL_HOURS = 1  # 缓存有效期 1 小时（股价实时变化）
 
 
 class StockDataFetcher:

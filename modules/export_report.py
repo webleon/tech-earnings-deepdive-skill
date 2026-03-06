@@ -7,13 +7,14 @@
 
 import sys
 from datetime import datetime
+import os
 from pathlib import Path
 
 
 class ReportExporter:
     """专业投资报告导出器"""
     
-    def __init__(self, analysis_result: dict, output_dir: str = 'output'):
+    def __init__(self, analysis_result: dict, output_dir: str = None):
         self.result = analysis_result
         self.ticker = analysis_result.get('ticker', 'UNKNOWN')
         self.data = analysis_result.get('data', {})
@@ -24,6 +25,9 @@ class ReportExporter:
         self.biases = analysis_result.get('biases', {})
         self.variant_view = analysis_result.get('variant_view', {})
         self.summary = analysis_result.get('summary', {})
+        # 使用环境变量 OUTPUT_DIR，默认外部存储
+        if output_dir is None:
+            output_dir = os.environ.get('OUTPUT_DIR', Path.home() / '.openclaw' / 'tech-earnings-output')
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
     

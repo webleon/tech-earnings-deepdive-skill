@@ -13,19 +13,17 @@ set -e
 
 # 脚本目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="${SCRIPT_DIR}/venv"
 LOG_DIR="${SCRIPT_DIR}/log"
 CACHE_DIR="${SCRIPT_DIR}/cache"
 MODULES_DIR="${SCRIPT_DIR}/modules"
 TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 CONFIG_FILE="${SCRIPT_DIR}/config.json"
+# 输出目录（外部存储，不纳入备份）
+OUTPUT_DIR="${OUTPUT_DIR:-$HOME/.openclaw/tech-earnings-output}"
+export OUTPUT_DIR
 
-# 激活虚拟环境
-if [[ -d "$VENV_DIR" ]]; then
-    source "$VENV_DIR/bin/activate"
-else
-    echo "⚠️ 虚拟环境不存在，使用系统 Python"
-fi
+# 使用系统 Python（无需虚拟环境）
+PYTHON_CMD="python3"
 
 # 日志文件
 LOG_FILE="${LOG_DIR}/$(date +%Y-%m-%d).log"
@@ -64,7 +62,7 @@ fetch_stock_data() {
     log "📊 获取 $stock 数据..."
     
     # 调用 Python 脚本获取数据
-    python3 "${SCRIPT_DIR}/modules/fetch_data.py" "$stock"
+    $PYTHON_CMD "${SCRIPT_DIR}/modules/fetch_data.py" "$stock"
 }
 
 # 执行 16 模块分析
@@ -73,7 +71,7 @@ run_modules_analysis() {
     local data=$2
     log "🔍 执行 16 模块分析..."
     
-    python3 "${SCRIPT_DIR}/modules/analyze.py" "$stock" "$data"
+    $PYTHON_CMD "${SCRIPT_DIR}/modules/analyze_full.py" "$stock" "$data"
 }
 
 # 执行 6 大视角分析
@@ -82,7 +80,7 @@ run_perspectives_analysis() {
     local data=$2
     log "👁️ 执行 6 大投资哲学视角分析..."
     
-    python3 "${SCRIPT_DIR}/modules/perspectives.py" "$stock" "$data"
+    $PYTHON_CMD "${SCRIPT_DIR}/modules/perspectives_full.py" "$stock" "$data"
 }
 
 # 执行估值分析
@@ -91,21 +89,16 @@ run_valuation() {
     local data=$2
     log "💰 执行多方法估值分析..."
     
-    python3 "${SCRIPT_DIR}/modules/valuation.py" "$stock" "$data"
+    $PYTHON_CMD "${SCRIPT_DIR}/modules/valuation_full.py" "$stock" "$data"
 }
 
 # 生成最终报告
 generate_report() {
     local stock=$1
-    local output_file="${SCRIPT_DIR}/output/${stock}_$(date +%Y%m%d_%H%M%S).md"
     
     log "📝 生成最终报告..."
     
-    python3 "${SCRIPT_DIR}/modules/report.py" "$stock" "$output_file"
-    
-    echo ""
-    echo "✅ 报告已生成：$output_file"
-    echo ""
+    $PYTHON_CMD "${SCRIPT_DIR}/generate_single_report.py" "$stock"
 }
 
 # 主函数
