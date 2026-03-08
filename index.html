@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tech Earnings Deep Dive - OpenClaw Skill</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #15151f;
+      --surface-light: #1e1e2d;
+      --accent: #10b981;
+      --accent-light: #34d399;
+      --accent-dark: #059669;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #000;
+      font-family: var(--font-body);
+    }
+    
+    .slides-wrapper {
+      position: fixed;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+    }
+    
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 3.5rem 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--bg);
+      opacity: 0;
+      visibility: hidden;
+    }
+    
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Typography */
+    h1 {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+    
+    h2 {
+      font-family: var(--font-display);
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+    }
+    
+    h3 {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+    
+    p, li {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+    
+    .eyebrow {
+      font-size: 0.875rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .highlight {
+      color: var(--accent-light);
+    }
+    
+    .slide-intro {
+      text-align: left;
+    }
+    
+    .slide-intro .subtitle {
+      font-size: 1.3rem;
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin-top: 1rem;
+    }
+    
+    /* Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+    }
+    
+    .card h3 {
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    
+    .card p {
+      font-size: 0.95rem;
+    }
+    
+    /* Module Grid */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    
+    .module-item {
+      background: var(--surface);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border-top: 3px solid var(--accent);
+    }
+    
+    .module-letter {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+    
+    .module-name {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    
+    .module-desc {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Perspectives */
+    .perspective-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .perspective-item {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.25rem;
+      background: var(--surface);
+      border-radius: 10px;
+      align-items: flex-start;
+    }
+    
+    .perspective-number {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      opacity: 0.5;
+      min-width: 50px;
+    }
+    
+    .perspective-content h3 {
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+      font-size: 1.15rem;
+    }
+    
+    .perspective-content p {
+      font-size: 0.95rem;
+    }
+    
+    /* Evidence Layers */
+    .evidence-layers {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .layer-item {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1.25rem;
+      background: var(--surface);
+      border-radius: 10px;
+    }
+    
+    .layer-badge {
+      background: var(--accent);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .layer-content h3 {
+      margin-bottom: 0.25rem;
+      color: var(--text-primary);
+      font-size: 1.1rem;
+    }
+    
+    .layer-content p {
+      font-size: 0.95rem;
+    }
+    
+    /* Code */
+    .code-block {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 1rem;
+      color: var(--accent-light);
+      margin: 1.5rem 0;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    /* Use Cases */
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .use-case-card {
+      background: var(--surface);
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .use-case-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .use-case-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+    
+    .use-case-card p {
+      font-size: 0.9rem;
+    }
+    
+    /* Output Preview */
+    .output-preview {
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 12px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 1.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .output-preview h4 {
+      color: var(--accent-light);
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    
+    .output-preview ul {
+      list-style: none;
+    }
+    
+    .output-preview li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--surface-light);
+      font-size: 0.9rem;
+    }
+    
+    .output-preview li:last-child {
+      border-bottom: none;
+    }
+    
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+      background: var(--surface);
+      border-radius: 12px;
+    }
+    
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+    
+    /* CTA */
+    .cta-buttons {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 2.5rem;
+    }
+    
+    .btn {
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--accent-light);
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 2px solid var(--text-secondary);
+    }
+    
+    .btn-secondary:hover {
+      border-color: var(--text-primary);
+    }
+    
+    /* Framework Diagram */
+    .framework-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .framework-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    
+    .framework-box {
+      background: var(--surface);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid var(--accent);
+    }
+    
+    .framework-box h4 {
+      color: var(--text-primary);
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .framework-box p {
+      font-size: 0.85rem;
+    }
+    
+    /* Navigation dots */
+    .slide-dots {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+    
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      opacity: 0.4;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: all 0.3s;
+    }
+    
+    .dot.active {
+      background: var(--accent);
+      opacity: 1;
+      transform: scale(1.3);
+    }
+    
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 1000;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    /* Slide number */
+    .slide-number {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+  
+  <div class="slides-wrapper">
+    
+    <!-- Slide 1: Title -->
+    <div class="slide active slide-intro" data-slide="0">
+      <div class="eyebrow">OpenClaw Skill</div>
+      <h1>Tech Earnings<br><span class="highlight">Deep Dive</span></h1>
+      <p class="subtitle">机构级科技股财报深度分析系统 · 16 大分析模块 · 6 大投资视角 · 多方法估值矩阵 · 反偏见框架</p>
+    </div>
+    
+    <!-- Slide 2: What is it -->
+    <div class="slide" data-slide="1">
+      <div class="eyebrow">是什么</div>
+      <h2>为 AI 打造的<br><span class="highlight">专业投资分析系统</span></h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>📊 16 大分析模块</h3>
+          <p>覆盖收入质量、盈利能力、现金流、竞争格局、高管团队、研发效率等全方位维度</p>
+        </div>
+        <div class="card">
+          <h3>🎯 6 大投资视角</h3>
+          <p>巴菲特质量复利、Baillie Gifford 想象力成长、Tiger Cubs 基本面多空等大师方法论</p>
+        </div>
+        <div class="card">
+          <h3>💰 多方法估值</h3>
+          <p>Owner Earnings、PEG、反向 DCF、魔法公式、EV/EBITDA、Rule of 40 六种方法交叉验证</p>
+        </div>
+        <div class="card">
+          <h3>🛡️ 反偏见框架</h3>
+          <p>认知陷阱自检、财务红旗、科技盲区、Pre-Mortem 事前尸检，避免常见决策错误</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 3: Why Need -->
+    <div class="slide" data-slide="2">
+      <div class="eyebrow">为什么需要</div>
+      <h2>传统分析的<span class="highlight">痛点</span></h2>
+      <div class="grid-2">
+        <div class="card" style="border-left-color: var(--danger);">
+          <h3>❌ 信息过载</h3>
+          <p>财报电话会数万文字、SEC 文件数百页、分析师研报几十份 —— 个人投资者难以处理</p>
+        </div>
+        <div class="card" style="border-left-color: var(--danger);">
+          <h3>❌ 视角单一</h3>
+          <p>只看 PE、只看成长、只看技术面 —— 缺乏多维度交叉验证</p>
+        </div>
+        <div class="card" style="border-left-color: var(--danger);">
+          <h3>❌ 认知偏见</h3>
+          <p>确认偏误、锚定效应、过度自信 —— 人性弱点导致决策失误</p>
+        </div>
+        <div class="card" style="border-left-color: var(--accent);">
+          <h3>✅ 系统化解决方案</h3>
+          <p>16 模块全面覆盖 + 6 视角交叉验证 + 反偏见框架 —— 机构级分析方法论</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 4: 16 Modules Overview -->
+    <div class="slide" data-slide="3">
+      <div class="eyebrow">分析框架</div>
+      <h2>16 大分析模块</h2>
+      <div class="module-grid">
+        <div class="module-item">
+          <div class="module-letter">A</div>
+          <div class="module-name">收入质量</div>
+          <div class="module-desc">Revenue Quality</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">B</div>
+          <div class="module-name">盈利能力</div>
+          <div class="module-desc">Profitability</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">C</div>
+          <div class="module-name">现金流</div>
+          <div class="module-desc">Cash Flow</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">D</div>
+          <div class="module-name">前瞻指引</div>
+          <div class="module-desc">Forward Guidance</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">E</div>
+          <div class="module-name">竞争格局</div>
+          <div class="module-desc">Competitive Landscape</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">F</div>
+          <div class="module-name">核心 KPI</div>
+          <div class="module-desc">Core KPIs</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">G</div>
+          <div class="module-name">产品与新业务</div>
+          <div class="module-desc">Products & Innovation</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">H</div>
+          <div class="module-name">合作伙伴生态</div>
+          <div class="module-desc">Partner Ecosystem</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">I</div>
+          <div class="module-name">高管团队</div>
+          <div class="module-desc">Executive Team</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">J</div>
+          <div class="module-name">宏观政策</div>
+          <div class="module-desc">Macro & Policy</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">K</div>
+          <div class="module-name">估值模型</div>
+          <div class="module-desc">Valuation Models</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">L</div>
+          <div class="module-name">筹码分布</div>
+          <div class="module-desc">Ownership Distribution</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">M</div>
+          <div class="module-name">长期监控变量</div>
+          <div class="module-desc">Long-term Monitoring</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">N</div>
+          <div class="module-name">研发效率</div>
+          <div class="module-desc">R&D Efficiency</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">O</div>
+          <div class="module-name">会计质量</div>
+          <div class="module-desc">Accounting Quality</div>
+        </div>
+        <div class="module-item">
+          <div class="module-letter">P</div>
+          <div class="module-name">ESG 筛查</div>
+          <div class="module-desc">ESG Screening</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 5: Modules Detail 1 -->
+    <div class="slide" data-slide="4">
+      <div class="eyebrow">模块详解</div>
+      <h2>财务健康度分析 (A-D)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>A. 收入质量</h3>
+          <p>检查收入确认政策、一次性收入占比、应收/收入比率、客户集中度风险</p>
+        </div>
+        <div class="card">
+          <h3>B. 盈利能力</h3>
+          <p>毛利率趋势、营业利润率、ROE/ROIC、与同行业对比、盈利可持续性</p>
+        </div>
+        <div class="card">
+          <h3>C. 现金流</h3>
+          <p>经营现金流/净利润比率、自由现金流、资本支出效率、现金转换周期</p>
+        </div>
+        <div class="card">
+          <h3>D. 前瞻指引</h3>
+          <p>管理层指引 vs 实际表现、指引准确性历史、下季度/全年展望、关键假设</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 6: Modules Detail 2 -->
+    <div class="slide" data-slide="5">
+      <div class="eyebrow">模块详解</div>
+      <h2>业务竞争力分析 (E-I)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>E. 竞争格局</h3>
+          <p>市场份额变化、竞争壁垒、替代品威胁、定价权、进入壁垒</p>
+        </div>
+        <div class="card">
+          <h3>F. 核心 KPI</h3>
+          <p>行业特定指标（如 SaaS 的 ARR、电商的 GMV、半导体的出货量）</p>
+        </div>
+        <div class="card">
+          <h3>G. 产品与新业务</h3>
+          <p>产品管线、创新投入、新业务进展、第二增长曲线</p>
+        </div>
+        <div class="card">
+          <h3>H. 合作伙伴生态</h3>
+          <p>战略伙伴关系、供应链稳定性、生态系统健康度、依赖风险</p>
+        </div>
+        <div class="card">
+          <h3>I. 高管团队</h3>
+          <p>CEO/CTO/CFO 背景、内部人交易、高管稳定性、股权结构</p>
+        </div>
+        <div class="card">
+          <h3>J. 宏观政策</h3>
+          <p>利率环境、监管风险、贸易政策、行业补贴、地缘政治</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 7: Modules Detail 3 -->
+    <div class="slide" data-slide="6">
+      <div class="eyebrow">模块详解</div>
+      <h2>深度分析模块 (K-P)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>K. 估值模型</h3>
+          <p>6 种估值方法交叉验证、敏感性分析、概率加权情景、与历史/同行对比</p>
+        </div>
+        <div class="card">
+          <h3>L. 筹码分布</h3>
+          <p>机构持仓变化、内部人持股、散户情绪、空头比例、集中度风险</p>
+        </div>
+        <div class="card">
+          <h3>M. 长期监控变量</h3>
+          <p>3-5 年关键观察点、技术颠覆风险、行业结构性变化、黑天鹅预警</p>
+        </div>
+        <div class="card">
+          <h3>N. 研发效率</h3>
+          <p>研发/收入比率、专利产出、研发人员占比、创新转化率</p>
+        </div>
+        <div class="card">
+          <h3>O. 会计质量</h3>
+          <p>Beneish M-Score、Sloan 应计利润、财务红旗、审计意见</p>
+        </div>
+        <div class="card">
+          <h3>P. ESG 筛查</h3>
+          <p>环境风险、社会责任、公司治理、争议事件、可持续性评级</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 8: 6 Perspectives -->
+    <div class="slide" data-slide="7">
+      <div class="eyebrow">投资哲学</div>
+      <h2>6 大投资视角</h2>
+      <div class="perspective-list">
+        <div class="perspective-item">
+          <div class="perspective-number">01</div>
+          <div class="perspective-content">
+            <h3>质量复利视角</h3>
+            <p><strong>代表人物：</strong>巴菲特/芒格 | <strong>关注点：</strong>护城河、ROE、自由现金流、管理层质量 | <strong>核心问题：</strong>这是一家可以持有 10 年的公司吗？</p>
+          </div>
+        </div>
+        <div class="perspective-item">
+          <div class="perspective-number">02</div>
+          <div class="perspective-content">
+            <h3>想象力成长视角</h3>
+            <p><strong>代表人物：</strong>Baillie Gifford/ARK | <strong>关注点：</strong>TAM、颠覆性创新、成长速度、网络效应 | <strong>核心问题：</strong>这家公司能改变世界吗？</p>
+          </div>
+        </div>
+        <div class="perspective-item">
+          <div class="perspective-number">03</div>
+          <div class="perspective-content">
+            <h3>基本面多空视角</h3>
+            <p><strong>代表人物：</strong>Tiger Cubs | <strong>关注点：</strong>相对价值、催化剂、风险收益比、市场预期差 | <strong>核心问题：</strong>市场定价错误在哪里？</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 9: 6 Perspectives Detail -->
+    <div class="slide" data-slide="8">
+      <div class="eyebrow">投资哲学</div>
+      <h2>6 大投资视角（续）</h2>
+      <div class="perspective-list">
+        <div class="perspective-item">
+          <div class="perspective-number">04</div>
+          <div class="perspective-content">
+            <h3>深度价值视角</h3>
+            <p><strong>代表人物：</strong>Klarman/Marks | <strong>关注点：</strong>安全边际、资产价值、逆向机会、清算价值 | <strong>核心问题：</strong>最坏情况下会怎样？</p>
+          </div>
+        </div>
+        <div class="perspective-item">
+          <div class="perspective-number">05</div>
+          <div class="perspective-content">
+            <h3>催化剂驱动视角</h3>
+            <p><strong>代表人物：</strong>Tepper/Ackman | <strong>关注点：</strong>事件驱动、activist 机会、重组潜力、政策变化 | <strong>核心问题：</strong>什么事件能触发重估？</p>
+          </div>
+        </div>
+        <div class="perspective-item">
+          <div class="perspective-number">06</div>
+          <div class="perspective-content">
+            <h3>宏观战术视角</h3>
+            <p><strong>代表人物：</strong>Druckenmiller | <strong>关注点：</strong>宏观环境、流动性、行业轮动、货币/财政政策 | <strong>核心问题：</strong>宏观顺风还是逆风？</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 10: Valuation Matrix -->
+    <div class="slide" data-slide="9">
+      <div class="eyebrow">估值体系</div>
+      <h2>多方法估值矩阵</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Owner Earnings</h3>
+          <p>所有者收益法，巴菲特最推崇的估值方法，计算真实可分配现金流</p>
+        </div>
+        <div class="card">
+          <h3>PEG</h3>
+          <p>成长调整市盈率，适合高成长公司，PEG<1 为低估</p>
+        </div>
+        <div class="card">
+          <h3>反向 DCF</h3>
+          <p>从当前股价反推隐含增长率，判断市场预期是否合理</p>
+        </div>
+        <div class="card">
+          <h3>魔法公式</h3>
+          <p>Greenblatt 的 ROIC+ 收益率组合，量化价值投资策略</p>
+        </div>
+        <div class="card">
+          <h3>EV/EBITDA</h3>
+          <p>企业价值倍数，跨行业对比标准，剔除资本结构影响</p>
+        </div>
+        <div class="card">
+          <h3>EV/Revenue + Rule of 40</h3>
+          <p>SaaS 公司专用，增长率 + 利润率>40% 为健康</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 11: Evidence Layers -->
+    <div class="slide" data-slide="10">
+      <div class="eyebrow">证据体系</div>
+      <h2>三层证据交叉验证</h2>
+      <div class="evidence-layers">
+        <div class="layer-item">
+          <div class="layer-badge">第一层</div>
+          <div class="layer-content">
+            <h3>一手来源</h3>
+            <p>CEO 原话、员工评价、客户评价、GitHub 活跃度、专利、招聘动向</p>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-badge">第二层</div>
+          <div class="layer-content">
+            <h3>事实来源</h3>
+            <p>SEC 文件（10-K/10-Q/8-K）、财报数据、法庭文件</p>
+          </div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-badge">第三层</div>
+          <div class="layer-content">
+            <h3>观点来源</h3>
+            <p>卖方研报、新闻分析、价格目标汇总</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 12: Anti-Bias -->
+    <div class="slide" data-slide="11">
+      <div class="eyebrow">反偏见框架</div>
+      <h2>避免常见决策错误</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>🧠 6 大认知陷阱</h3>
+          <p>确认偏误、锚定效应、过度自信、损失厌恶、从众心理、近期偏好</p>
+        </div>
+        <div class="card">
+          <h3>🚩 7 大财务红旗</h3>
+          <p>收入确认异常、内部人交易、GAAP vs Non-GAAP 差异、资本支出暴增、现金流背离、负债结构恶化、会计质量</p>
+        </div>
+        <div class="card">
+          <h3>💻 5 大科技盲区</h3>
+          <p>TAM 幻觉、CAC 拐点、股票期权稀释、技术颠覆风险、监管黑天鹅</p>
+        </div>
+        <div class="card">
+          <h3>⚰️ Pre-Mortem</h3>
+          <p>事前尸检：假设 3 年后这笔投资失败了，原因可能是什么？</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 13: Usage -->
+    <div class="slide" data-slide="12">
+      <div class="eyebrow">使用方式</div>
+      <h2>简单直接的调用</h2>
+      <div class="code-block">~/.openclaw/workspace/skills/tech-earnings-deepdive-openclaw-skill/run.sh NVDA</div>
+      <p>或在对话中直接询问：</p>
+      <div class="code-block" style="background: transparent; border: 1px solid var(--text-secondary);">
+        "帮我深度分析一下 NVDA 最新一季的财报"<br>
+        "TSLA 这季度财报出来了，帮我做个全面的 deep dive"<br>
+        "从多个投资大师的视角帮我看看 MSFT，现在值得买入吗？"
+      </div>
+    </div>
+    
+    <!-- Slide 14: Use Cases -->
+    <div class="slide" data-slide="13">
+      <div class="eyebrow">适用场景</div>
+      <h2>任何需要深度研究的时刻</h2>
+      <div class="use-case-grid">
+        <div class="use-case-card">
+          <div class="use-case-icon">📊</div>
+          <h3>财报分析</h3>
+          <p>季报/年报深度解读</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">💼</div>
+          <h3>持仓决策</h3>
+          <p>买入/卖出/持有判断</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">🔍</div>
+          <h3>深度研究</h3>
+          <p>全面公司分析</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">💰</div>
+          <h3>估值判断</h3>
+          <p>当前价格贵不贵</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">🎯</div>
+          <h3>多角度分析</h3>
+          <p>大师视角交叉验证</p>
+        </div>
+        <div class="use-case-card">
+          <div class="use-case-icon">📈</div>
+          <h3>投研报告</h3>
+          <p>机构级分析输出</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 15: Output -->
+    <div class="slide" data-slide="14">
+      <div class="eyebrow">输出内容</div>
+      <h2>完整的投资备忘录</h2>
+      <div class="output-preview">
+        <h4>📋 报告包含</h4>
+        <ul>
+          <li>✅ 执行摘要与 TL;DR</li>
+          <li>✅ Key Forces（决定性力量）</li>
+          <li>✅ 16 大模块分析（A-P）</li>
+          <li>✅ 估值矩阵（多方法 + 敏感性 + 概率加权情景）</li>
+          <li>✅ 筹码分布分析</li>
+          <li>✅ Variant View（变异视角）</li>
+          <li>✅ 6 大投资哲学视角汇总</li>
+          <li>✅ Pre-Mortem 与反偏见检查</li>
+          <li>✅ 长期监控变量与 Action Trigger</li>
+          <li>✅ 决策框架（持仓分类 / Action Price / 建仓节奏 / 仓位建议）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Slide 16: Stats -->
+    <div class="slide" data-slide="15">
+      <div class="eyebrow">分析深度</div>
+      <h2>机构级研究标准</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">16</div>
+          <div class="stat-label">独立分析模块</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">6</div>
+          <div class="stat-label">投资哲学视角</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">18+</div>
+          <div class="stat-label">反偏见检查项</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Slide 17: CTA -->
+    <div class="slide" data-slide="16">
+      <div class="eyebrow">开始使用</div>
+      <h2>像机构一样<br><span class="highlight">深度研究</span></h2>
+      <p>告别碎片化信息，建立系统化分析框架</p>
+      <div class="cta-buttons">
+        <a href="https://github.com/webleon/tech-earnings-deepdive-openclaw-skill" class="btn btn-primary" target="_blank">🔗 GitHub 仓库</a>
+        <a href="https://github.com/webleon/tech-earnings-deepdive-openclaw-skill" class="btn btn-secondary" target="_blank">查看文档 →</a>
+      </div>
+    </div>
+    
+  </div>
+  
+  <nav class="slide-dots" aria-label="Slide navigation"></nav>
+  <div class="slide-number" id="slideNumber">1 / 17</div>
+  
+  <script>
+    // === VIEWPORT SCALING ===
+    const SLIDE_W = 1280;
+    const SLIDE_H = 720;
+    const slidesWrapper = document.querySelector('.slides-wrapper');
+    const slides = document.querySelectorAll('.slide');
+    
+    function scaleToViewport() {
+      const scaleX = window.innerWidth / SLIDE_W;
+      const scaleY = window.innerHeight / SLIDE_H;
+      const scale = Math.min(scaleX, scaleY);
+      const offsetX = (window.innerWidth - SLIDE_W * scale) / 2;
+      const offsetY = (window.innerHeight - SLIDE_H * scale) / 2;
+      slidesWrapper.style.transform = `scale(${scale})`;
+      slidesWrapper.style.transformOrigin = '0 0';
+      slidesWrapper.style.left = offsetX + 'px';
+      slidesWrapper.style.top = offsetY + 'px';
+    }
+    
+    window.addEventListener('resize', scaleToViewport);
+    document.addEventListener('fullscreenchange', scaleToViewport);
+    scaleToViewport();
+    
+    // === NAVIGATION ===
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+    
+    function goToSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides[currentSlide].classList.remove('active');
+      slides[index].classList.add('active');
+      currentSlide = index;
+      
+      // Update dots
+      document.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === index);
+      });
+      
+      // Update slide number
+      document.getElementById('slideNumber').textContent = `${index + 1} / ${totalSlides}`;
+      
+      // Update progress bar
+      document.getElementById('progressBar').style.width = ((index + 1) / totalSlides * 100) + '%';
+      
+      // Animate content
+      animateSlide(index);
+    }
+    
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+    
+    // Build dots
+    function buildDots() {
+      const nav = document.querySelector('.slide-dots');
+      slides.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        dot.addEventListener('click', (e) => { e.stopPropagation(); goToSlide(i); });
+        nav.appendChild(dot);
+      });
+    }
+    buildDots();
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+    
+    // Click zones
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('button, a')) return;
+      if (e.clientX > window.innerWidth / 2) nextSlide();
+      else prevSlide();
+    });
+    
+    // Touch/swipe
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+      const delta = touchStartX - e.changedTouches[0].clientX;
+      if (Math.abs(delta) > 50) delta > 0 ? nextSlide() : prevSlide();
+    }, { passive: true });
+    
+    // Mouse wheel
+    let wheelCooldown = false;
+    document.addEventListener('wheel', (e) => {
+      if (wheelCooldown) return;
+      wheelCooldown = true;
+      setTimeout(() => wheelCooldown = false, 800);
+      e.deltaY > 0 ? nextSlide() : prevSlide();
+    }, { passive: true });
+    
+    // === ANIMATIONS ===
+    function animateSlide(index) {
+      const slide = slides[index];
+      const elements = slide.querySelectorAll('h1, h2, h3, p, .card, .module-item, .perspective-item, .layer-item, .code-block, .use-case-card, .stat-card, .btn, .subtitle, .framework-box, .output-preview li');
+      
+      gsap.fromTo(elements, 
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.06, ease: 'power2.out', delay: 0.1 }
+      );
+    }
+    
+    // Animate first slide
+    animateSlide(0);
+    
+    // Reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.globalTimeline.timeScale(0.01);
+    }
+  </script>
+</body>
+</html>
