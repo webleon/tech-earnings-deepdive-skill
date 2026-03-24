@@ -9,30 +9,102 @@
   "enable_modules": "all",
   "enable_perspectives": "all",
   "modules": {
-    "A": {"name": "收入质量", "enabled": true},
-    "B": {"name": "盈利能力", "enabled": true},
-    "C": {"name": "现金流", "enabled": true},
-    "D": {"name": "前瞻指引", "enabled": true},
-    "E": {"name": "竞争格局", "enabled": true},
-    "F": {"name": "核心 KPI", "enabled": true},
-    "G": {"name": "产品与新业务", "enabled": true},
-    "H": {"name": "合作伙伴生态", "enabled": true},
-    "I": {"name": "高管团队", "enabled": true},
-    "J": {"name": "宏观政策", "enabled": true},
-    "K": {"name": "估值模型", "enabled": true},
-    "L": {"name": "筹码分布", "enabled": true},
-    "M": {"name": "长期监控变量", "enabled": true},
-    "N": {"name": "研发效率", "enabled": true},
-    "O": {"name": "会计质量", "enabled": true},
-    "P": {"name": "ESG 筛查", "enabled": true}
+    "A": {
+      "name": "收入质量",
+      "enabled": true
+    },
+    "B": {
+      "name": "盈利能力",
+      "enabled": true
+    },
+    "C": {
+      "name": "现金流",
+      "enabled": true
+    },
+    "D": {
+      "name": "前瞻指引",
+      "enabled": true
+    },
+    "E": {
+      "name": "竞争格局",
+      "enabled": true
+    },
+    "F": {
+      "name": "核心 KPI",
+      "enabled": true
+    },
+    "G": {
+      "name": "产品与新业务",
+      "enabled": true
+    },
+    "H": {
+      "name": "合作伙伴生态",
+      "enabled": true
+    },
+    "I": {
+      "name": "高管团队",
+      "enabled": true
+    },
+    "J": {
+      "name": "宏观政策",
+      "enabled": true
+    },
+    "K": {
+      "name": "估值模型",
+      "enabled": true
+    },
+    "L": {
+      "name": "筹码分布",
+      "enabled": true
+    },
+    "M": {
+      "name": "长期监控变量",
+      "enabled": true
+    },
+    "N": {
+      "name": "研发效率",
+      "enabled": true
+    },
+    "O": {
+      "name": "会计质量",
+      "enabled": true
+    },
+    "P": {
+      "name": "ESG 筛查",
+      "enabled": true
+    }
   },
   "perspectives": {
-    "quality_compounder": {"name": "质量复利", "representatives": "巴菲特/芒格", "enabled": true},
-    "imaginative_growth": {"name": "想象力成长", "representatives": "Baillie Gifford/ARK", "enabled": true},
-    "fundamental_long_short": {"name": "基本面多空", "representatives": "Tiger Cubs", "enabled": true},
-    "deep_value": {"name": "深度价值", "representatives": "Klarman/Marks", "enabled": true},
-    "catalyst_driven": {"name": "催化剂驱动", "representatives": "Tepper/Ackman", "enabled": true},
-    "macro_tactical": {"name": "宏观战术", "representatives": "Druckenmiller", "enabled": true}
+    "quality_compounder": {
+      "name": "质量复利",
+      "representatives": "巴菲特/芒格",
+      "enabled": true
+    },
+    "imaginative_growth": {
+      "name": "想象力成长",
+      "representatives": "Baillie Gifford/ARK",
+      "enabled": true
+    },
+    "fundamental_long_short": {
+      "name": "基本面多空",
+      "representatives": "Tiger Cubs",
+      "enabled": true
+    },
+    "deep_value": {
+      "name": "深度价值",
+      "representatives": "Klarman/Marks",
+      "enabled": true
+    },
+    "catalyst_driven": {
+      "name": "催化剂驱动",
+      "representatives": "Tepper/Ackman",
+      "enabled": true
+    },
+    "macro_tactical": {
+      "name": "宏观战术",
+      "representatives": "Druckenmiller",
+      "enabled": true
+    }
   },
   "valuation_methods": [
     "owner_earnings",
@@ -49,8 +121,34 @@
     "pre_mortem": true
   },
   "evidence_layers": {
-    "primary": ["CEO 原话", "员工评价", "客户评价", "GitHub", "专利", "招聘"],
-    "factual": ["SEC 文件", "财报数据", "法庭文件"],
-    "opinion": ["卖方研报", "新闻分析", "价格目标"]
+    "primary": [
+      "CEO 原话",
+      "员工评价",
+      "客户评价",
+      "GitHub",
+      "专利",
+      "招聘"
+    ],
+    "factual": [
+      "SEC 文件",
+      "财报数据",
+      "法庭文件"
+    ],
+    "opinion": [
+      "卖方研报",
+      "新闻分析",
+      "价格目标"
+    ]
+  },
+  "batch_analysis": {
+    "max_workers": 3,
+    "rate_limit": 10,
+    "rate_period": 60,
+    "timeout_per_stock": 300
+  },
+  "error_handling": {
+    "retry_on_failure": true,
+    "max_retries": 2,
+    "log_level": "INFO"
   }
 }

@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
+import time
 
 # 添加模块路径
 sys.path.insert(0, str(Path(__file__).parent / 'modules'))
@@ -19,17 +20,47 @@ from core import analyze_single_stock, export_report
 
 
 class BatchAnalyzer:
-    """批量分析器"""
+    """批量分析器（带速率限制）"""
     
-    def __init__(self, tickers: List[str], max_workers: int = 3):
+    def __init__(self, tickers: List[str], max_workers: int = 3, 
+                 rate_limit: int = 10, rate_period: int = 60):
+        """
+        Args:
+            tickers: 股票代码列表
+            max_workers: 最大并发数
+            rate_limit: 每 rate_period 秒最多请求次数
+            rate_period: 速率限制周期 (秒)
+        """
         self.tickers = tickers
         self.max_workers = max_workers
+        self.rate_limit = rate_limit
+        self.rate_period = rate_period
         self.results = {}
+        self.request_times = []  # 记录请求时间
         
         # 输出目录
         output_base = os.environ.get('OUTPUT_DIR', Path.home() / '.openclaw' / 'tech-earnings-output')
         self.output_dir = Path(output_base) / 'batch'
         self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def _enforce_rate_limit(self):
+        """执行速率限制"""
+        now = time.time()
+        
+        # 移除过期的请求时间
+        self.request_times = [t for t in self.request_times if now - t < self.rate_period]
+        
+        # 如果达到限制，等待
+        if len(self.request_times) >= self.rate_limit:
+            oldest = min(self.request_times)
+            wait_time = self.rate_period - (now - oldest) + 1
+            if wait_time > 0:
+                print(f"⏳ 触发速率限制，等待 {wait_time:.1f} 秒...")
+                time.sleep(wait_time)
+                self.request_times = []  # 重置
+        
+        # 记录本次请求
+        self.request_times.append(time.time())
     
     def analyze_all(self, use_cache: bool = True) -> Dict:
         """分析所有股票（完整流程）"""
@@ -45,10 +76,12 @@ class BatchAnalyzer:
         # 多线程并行分析
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # 提交任务（始终完整分析，包含 Variant View）
-            future_to_ticker = {
-                executor.submit(analyze_single_stock, ticker, use_cache): ticker
-                for ticker in self.tickers
-            }
+            future_to_ticker = {}
+            for ticker in self.tickers:
+                # 速率限制
+                self._enforce_rate_limit()
+                future = executor.submit(analyze_single_stock, ticker, use_cache)
+                future_to_ticker[future] = ticker
             
             # 收集结果
             completed = 0

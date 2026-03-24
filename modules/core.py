@@ -7,6 +7,7 @@
 
 import os
 import sys
+import logging
 import statistics
 from pathlib import Path
 from typing import Dict, Optional
@@ -21,6 +22,10 @@ from valuation_full import ValuationCalculator
 from key_forces import identify_key_forces
 from bias_framework import check_biases
 from variant_view import generate_variant_view
+from exceptions import DataFetchError, InsufficientDataError, AnalysisError
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 
 def calculate_summary(modules: dict, perspectives: dict, valuation: dict, biases: dict) -> dict:
@@ -181,44 +186,119 @@ def analyze_single_stock(ticker: str, use_cache: bool = True) -> dict:
         use_cache: 是否使用缓存（默认 True）
     
     Returns:
-        完整的分析结果字典
+        完整的分析结果字典，包含 success 字段
     """
-    # 1. 获取数据
-    data = fetch_stock_data(ticker, use_cache=use_cache)
-    
-    # 2. 16 模块分析
-    modules_result = analyze_16_modules(data)
-    
-    # 3. 6 大视角分析
-    perspectives_result = analyze_perspectives_full(ticker, data)
-    
-    # 4. 估值分析
-    valuation_result = ValuationCalculator(data).calculate_all()
-    
-    # 5. Key Forces
-    forces = identify_key_forces(data)
-    
-    # 6. 反偏见框架
-    biases = check_biases(data)
-    
-    # 7. Variant View（始终执行）
-    variant_view = generate_variant_view(ticker, data)
-    
-    # 8. 综合评分
-    summary = calculate_summary(modules_result, perspectives_result, valuation_result, biases)
-    
-    # 9. 整合结果
-    return {
-        'ticker': ticker,
-        'data': data,
-        'modules': modules_result,
-        'perspectives': perspectives_result,
-        'valuation': valuation_result,
-        'key_forces': forces,
-        'biases': biases,
-        'variant_view': variant_view,
-        'summary': summary
-    }
+    try:
+        logger.info(f"开始分析股票：{ticker}")
+        
+        # 1. 获取数据
+        try:
+            data = fetch_stock_data(ticker, use_cache=use_cache)
+        except Exception as e:
+            logger.error(f"{ticker} 数据获取失败：{e}")
+            raise DataFetchError(ticker, "all_sources", str(e))
+        
+        # 2. 16 模块分析
+        try:
+            modules_result = analyze_16_modules(data)
+        except Exception as e:
+            logger.error(f"{ticker} 模块分析失败：{e}")
+            raise AnalysisError(ticker, "16_modules", str(e))
+        
+        # 3. 6 大视角分析
+        try:
+            perspectives_result = analyze_perspectives_full(ticker, data)
+        except Exception as e:
+            logger.warning(f"{ticker} 视角分析失败：{e}")
+            perspectives_result = {'error': str(e)}
+        
+        # 4. 估值分析
+        try:
+            valuation_result = ValuationCalculator(data).calculate_all()
+        except Exception as e:
+            logger.warning(f"{ticker} 估值分析失败：{e}")
+            valuation_result = {'error': str(e)}
+        
+        # 5. Key Forces
+        try:
+            forces = identify_key_forces(data)
+        except Exception as e:
+            logger.warning(f"{ticker} Key Forces 识别失败：{e}")
+            forces = {'error': str(e)}
+        
+        # 6. 反偏见框架
+        try:
+            biases = check_biases(data)
+        except Exception as e:
+            logger.warning(f"{ticker} 偏见检查失败：{e}")
+            biases = {'error': str(e)}
+        
+        # 7. Variant View（始终执行）
+        try:
+            variant_view = generate_variant_view(ticker, data)
+        except Exception as e:
+            logger.warning(f"{ticker} Variant View 生成失败：{e}")
+            variant_view = {'error': str(e)}
+        
+        # 8. 综合评分
+        try:
+            summary = calculate_summary(modules_result, perspectives_result, valuation_result, biases)
+        except Exception as e:
+            logger.warning(f"{ticker} 综合评分计算失败：{e}")
+            summary = {'error': str(e), 'overall_score': 0, 'recommendation': '无法评估'}
+        
+        logger.info(f"{ticker} 分析完成")
+        
+        # 9. 整合结果
+        return {
+            'ticker': ticker,
+            'data': data,
+            'modules': modules_result,
+            'perspectives': perspectives_result,
+            'valuation': valuation_result,
+            'key_forces': forces,
+            'biases': biases,
+            'variant_view': variant_view,
+            'summary': summary,
+            'success': True,
+            'error': None
+        }
+        
+    except DataFetchError as e:
+        logger.error(f"数据获取失败：{e}")
+        return {
+            'ticker': ticker,
+            'error': f"数据获取失败：{str(e)}",
+            'error_type': 'data_fetch',
+            'success': False
+        }
+        
+    except InsufficientDataError as e:
+        logger.warning(f"数据不足：{e}")
+        return {
+            'ticker': ticker,
+            'error': f"数据不足：{str(e)}",
+            'error_type': 'insufficient_data',
+            'success': False
+        }
+        
+    except AnalysisError as e:
+        logger.error(f"分析失败：{e}")
+        return {
+            'ticker': ticker,
+            'error': f"分析失败：{str(e)}",
+            'error_type': 'analysis',
+            'success': False
+        }
+        
+    except Exception as e:
+        logger.error(f"未知错误：{ticker} - {e}", exc_info=True)
+        return {
+            'ticker': ticker,
+            'error': f"未知错误：{str(e)}",
+            'error_type': 'unknown',
+            'success': False
+        }
 
 
 def export_report(result: dict, output_dir: Optional[str] = None) -> str:
