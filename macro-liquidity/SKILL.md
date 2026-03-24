@@ -4,11 +4,11 @@ description: Macro liquidity monitoring and risk early-warning system. By tracki
 output:
   directory: "~/.openclaw/workspace/output/tech-earnings-deepdive"
   naming: "{YYYY-MM-DD}_{SYMBOL}_macro.{ext}"
-  formats: ["md"]
+  formats: ["html", "md"]  # HTML 优先，除非用户要求否则不输出 MD
   examples:
-    - "2026-03-24_AAPL_macro.md"
-    - "2026-03-24_market_macro.md"
-  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory."
+    - "2026-03-24_AAPL_macro.html"
+    - "2026-03-24_market_macro.html"
+  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory. Default format: HTML."
 ---
 
 # Macro Liquidity Monitoring System

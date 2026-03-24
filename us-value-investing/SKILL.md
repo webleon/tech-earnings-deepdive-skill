@@ -4,11 +4,11 @@ description: US stock value investing analysis framework. Systematically evaluat
 output:
   directory: "~/.openclaw/workspace/output/tech-earnings-deepdive"
   naming: "{YYYY-MM-DD}_{SYMBOL}_value.{ext}"
-  formats: ["md"]
+  formats: ["html", "md"]  # HTML 优先，除非用户要求否则不输出 MD
   examples:
-    - "2026-03-24_AAPL_value.md"
-    - "2026-03-24_NVDA_value.md"
-  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory."
+    - "2026-03-24_AAPL_value.html"
+    - "2026-03-24_NVDA_value.html"
+  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory. Default format: HTML."
 ---
 
 # US Stock Value Investing Analysis Framework

@@ -4,11 +4,11 @@ description: Bitcoin bottom-timing judgment model. By tracking 6 core indicators
 output:
   directory: "~/.openclaw/workspace/output/tech-earnings-deepdive"
   naming: "{YYYY-MM-DD}_BTC_bottom.{ext}"
-  formats: ["md"]
+  formats: ["html", "md"]  # HTML 优先，除非用户要求否则不输出 MD
   examples:
-    - "2026-03-24_BTC_bottom.md"
-    - "2026-03-20_BTC_bottom.md"
-  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory."
+    - "2026-03-24_BTC_bottom.html"
+    - "2026-03-20_BTC_bottom.html"
+  note: "Sub-skill of tech-earnings-deepdive. All outputs go to the same directory. Default format: HTML."
 ---
 
 # Bitcoin Bottom-Timing Judgment Model

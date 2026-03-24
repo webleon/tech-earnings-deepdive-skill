@@ -5,9 +5,9 @@ description: 科技股财报深度分析与多视角投资备忘录系统（v3.0
 output:
   directory: "~/.openclaw/workspace/output/tech-earnings-deepdive"
   naming: "{YYYY-MM-DD}_{SYMBOL}_{QUARTER}.{ext}"
-  formats: ["md", "html"]
+  formats: ["html", "md"]  # HTML 优先，除非用户要求否则不输出 MD
   examples:
-    - "2026-03-24_AAPL_Q1.md"
+    - "2026-03-24_AAPL_Q1.html"
     - "2026-03-24_NVDA_2026Q1.html"
 ---
 
@@ -773,3 +773,108 @@ output:
 - **us-value-investing**：完成本分析后，建议额外运行四维价值评分做交叉验证
 - **us-market-sentiment**：模块J涉及宏观情绪时联动
 - **macro-liquidity**：流动性环境是Key Force时联动
+
+## 与子技能的协同工作流
+
+### 📊 技能架构图
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           tech-earnings-deepdive (主技能)                │
+│   16 模块分析 + 6 大投资视角 + 估值矩阵 + 决策框架          │
+└────────────────────┬────────────────────────────────────┘
+                     │
+         ┌───────────┼───────────┬───────────┐
+         ▼           ▼           ▼           ▼
+┌─────────────┐ ┌─────────┐ ┌──────────┐ ┌──────────┐
+│us-value-    │ │macro-   │ │btc-bottom│ │us-market │
+│investing    │ │liquidity│ │-model    │ │sentiment │
+│四维价值评分  │ │流动性   │ │BTC 底部   │ │市场情绪   │
+│(ROE/负债/   │ │(Fed/    │ │(RSI/     │ │(NAAIM/   │
+│现金流/护城河)│ │SOFR/MOVE│ │MVRV/矿工)│ │机构/散户) │
+└─────────────┘ └─────────┘ └──────────┘ └──────────┘
+```
+
+### 场景 1: 完整科技股分析（推荐）
+
+**步骤**:
+1. **运行主技能** `tech-earnings-deepdive` 进行 16 模块深度分析
+2. **联动子技能** 根据分析内容自动建议运行相关子技能：
+   - 模块 D(ROE 可持续性) → 建议运行 `us-value-investing` 交叉验证
+   - 模块 J(宏观流动性) → 建议运行 `macro-liquidity` 获取环境评估
+   - 模块 L(市场情绪) → 建议运行 `us-market-sentiment` 获取 sentiment 数据
+3. **综合判断** 整合主技能和子技能结果，形成最终投资建议
+
+**触发条件**:
+```
+用户："帮我分析一下 AAPL 最新财报"
+     ↓
+主技能分析完成
+     ↓
+检测到模块 D ROE 评分高 → 建议："建议运行 us-value-investing 进行四维价值评分交叉验证"
+检测到模块 J 提及流动性紧张 → 建议："建议运行 macro-liquidity 评估宏观环境"
+```
+
+### 场景 2: 宏观驱动分析
+
+**步骤**:
+1. 先运行 `macro-liquidity` 评估流动性环境
+2. 如流动性评级为"紧张"或"危险"，在模块 J 中引用并调整仓位建议
+3. 根据流动性评级调整整体科技股仓位
+
+**示例**:
+```
+macro-liquidity 输出：流动性评级 = "危险"
+     ↓
+tech-earnings-deepdive 模块 J 引用：
+"当前宏观流动性处于危险水平 (SOFR 飙升，MOVE 指数高位)，建议降低科技股仓位至 50%"
+     ↓
+最终仓位建议：从 100% 降至 50%
+```
+
+### 场景 3: 加密货币分析
+
+**步骤**:
+1. 运行 `btc-bottom-model` 判断底部区域
+2. 如进入底部区域，联动 `macro-liquidity` 确认宏观环境
+3. 综合判断建仓时机
+
+**示例**:
+```
+btc-bottom-model 输出：底部评级 = "深度底部区"
+macro-liquidity 输出：流动性评级 = "改善中"
+     ↓
+综合建议："BTC 进入底部区域，宏观流动性改善，建议分批建仓 (30% → 50% → 20%)"
+```
+
+### 场景 4: 市场情绪极端时
+
+**步骤**:
+1. 运行 `us-market-sentiment` 评估市场情绪
+2. 如情绪极端 (极度贪婪/极度恐惧)，在主技能中调整反向操作建议
+3. 结合估值矩阵判断是否逆向投资
+
+**示例**:
+```
+us-market-sentiment 输出：情绪评级 = "极度恐惧" (NAAIM < 20)
+     ↓
+tech-earnings-deepdive 模块 L 引用：
+"市场情绪极度恐惧，历史上这是逆向买入的良机"
+     ↓
+投资建议："建议逆向建仓优质科技股，优先选择现金流强劲、估值合理的标的"
+```
+
+### 输出格式说明
+
+**默认输出**: HTML 格式（美观、可交互、适合分享）
+
+**MD 格式**: 仅在用户明确要求时输出（如"输出为 markdown"）
+
+**文件命名**:
+- 主技能：`2026-03-24_AAPL_Q1.html`
+- us-value-investing: `2026-03-24_AAPL_value.html`
+- macro-liquidity: `2026-03-24_AAPL_macro.html`
+- btc-bottom-model: `2026-03-24_BTC_bottom.html`
+- us-market-sentiment: `2026-03-24_market_sentiment.html`
+
+所有输出文件统一存放在 `~/.openclaw/workspace/output/tech-earnings-deepdive/`
